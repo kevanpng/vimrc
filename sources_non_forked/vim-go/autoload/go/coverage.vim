@@ -51,7 +51,7 @@ function! go#coverage#Buffer(bang, ...) abort
   if go#util#has_job()
     call s:coverage_job({
           \ 'cmd': ['go', 'test', '-coverprofile', l:tmpname] + a:000,
-          \ 'complete': function('s:coverage_callback', [l:tmpname]),
+          \ 'custom_cb': function('s:coverage_callback', [l:tmpname]),
           \ 'bang': a:bang,
           \ 'for': 'GoTest',
           \ })
@@ -107,7 +107,7 @@ function! go#coverage#Browser(bang, ...) abort
   if go#util#has_job()
     call s:coverage_job({
           \ 'cmd': ['go', 'test', '-coverprofile', l:tmpname],
-          \ 'complete': function('s:coverage_browser_callback', [l:tmpname]),
+          \ 'custom_cb': function('s:coverage_browser_callback', [l:tmpname]),
           \ 'bang': a:bang,
           \ 'for': 'GoTest',
           \ })
@@ -278,8 +278,7 @@ function s:coverage_job(args)
   call go#cmd#autowrite()
 
   let status_dir =  expand('%:p:h')
-  let Complete = a:args.complete
-  function! s:complete(job, exit_status, data) closure
+  function! s:error_info_cb(job, exit_status, data) closure
     let status = {
           \ 'desc': 'last status',
           \ 'type': "coverage",
@@ -291,16 +290,14 @@ function s:coverage_job(args)
     endif
 
     call go#statusline#Update(status_dir, status)
-    return Complete(a:job, a:exit_status, a:data)
   endfunction
 
-  let a:args.complete = funcref('s:complete')
+  let a:args.error_info_cb = funcref('s:error_info_cb')
   let callbacks = go#job#Spawn(a:args)
 
   let start_options = {
         \ 'callback': callbacks.callback,
         \ 'exit_cb': callbacks.exit_cb,
-        \ 'close_cb': callbacks.close_cb,
         \ }
 
   " pre start
