@@ -35,8 +35,6 @@ if (exists('+colorcolumn'))
     highlight ColorColumn ctermbg=0
 endif
 
-" ack command
-
 nnoremap <leader>a :Ack
 
 nnoremap <leader>w <C-w>v<C-w>l
